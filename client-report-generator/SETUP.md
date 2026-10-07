@@ -39,7 +39,8 @@ trigger (bottom lane). It creates a Google Sheet named
 - `config` — one row per client: `client_id`, `client_name`, `enabled`,
   `src_meta_ads`, `src_google_ads`, `src_ga4`, `sink_gmail`, `sink_slack`,
   `recipients_email`, `slack_channel`, `meta_ad_account_id`,
-  `google_ads_customer_id`, `ga4_property_id`.
+  `google_ads_customer_id`, `ga4_property_id`, `delivery_mode`,
+  `brand_name`, `brand_color`, `brand_logo_url`, `alert_threshold_pct`.
 - `reports` — the sent-report ledger: `dedupe_key`
   (`client_id__report_date`), `client_id`, `report_date`, `sinks_sent`,
   `sent_at`. It powers idempotent re-runs.
@@ -58,6 +59,17 @@ One row per client. Set each `src_*`/`sink_*` cell to `yes` or `no` —
 that cell alone decides whether a source is fetched or a sink is used for
 that client. Fill the matching account-id columns for enabled sources and
 the recipient columns for enabled sinks.
+
+Optional per-client cells (all safe to leave empty):
+
+- `delivery_mode` — `send` (default) mails the report; `draft` files it
+  into the client's Gmail drafts for your review instead of sending.
+- `brand_name` / `brand_color` / `brand_logo_url` — render a branded HTML
+  header on the email report (defaults: client name, neutral color, no
+  logo).
+- `alert_threshold_pct` — a number like `15`: any metric whose WoW change
+  is at or beyond that percent is marked **FLAGGED** in the report body
+  and counted in the run digest. Empty means no flagging.
 
 ## Step 6 — Activate
 
@@ -78,7 +90,8 @@ ever fails.
   sinks, and `reports` is upserted on `client_id + report_date` so a
   re-run never double-sends.
 - **Digest:** every run ends with one digest — reports delivered, skipped,
-  and alerts (a source outage, a missing recipient, a duplicate).
+  anomaly flags (`anomaly_flags` + `flagged_metrics`), and alerts (a
+  source outage, a missing recipient, a duplicate).
 
 ## Troubleshooting
 
@@ -88,6 +101,8 @@ ever fails.
 | A source never runs | Its `src_*` cell is not `yes` in the client's row |
 | Digest shows a `failure` alert | The named source fetch failed — check its env token; other clients were unaffected |
 | Digest shows `duplicate` | That report already exists in `reports` — delete the ledger row to allow a re-send |
+| Client got a draft, not an email | `delivery_mode` is `draft` — set it to `send` (or empty) to mail directly; drafts also count as delivered for the ledger |
+| Email header shows wrong brand | Fix `brand_name`/`brand_color`/`brand_logo_url` cells; an invalid color falls back to the neutral default |
 | Run at a wrong hour | Workflow Settings → Timezone — set yours |
 | AI node 401 | Check the OpenAI credential |
 | Slack silent | `SLACK_BOT_TOKEN` unset on the instance, or `slack_channel` empty for the row |
