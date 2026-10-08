@@ -54,11 +54,30 @@ See a real rendered report: [SAMPLE-REPORT.md](SAMPLE-REPORT.md)
 
 ## Setup
 
-Step-by-step: **[SETUP.md](SETUP.md)** — import `workflow.json`, press
-play on the SETUP trigger to create the workbook, paste the printed
-`spreadsheet_id` into **Workflow Config**, attach credentials (Gmail +
-Sheets + OpenAI, plus Header Auth / Custom Auth on each HTTP node), set
-the operator address, fill the `config` tab, activate.
+1. **Import** — n8n → Workflows → Import from file → `workflow.json`.
+2. **Attach credentials** — Gmail, Google Sheets and OpenAI on the nodes
+   that ask; then one generic credential per HTTP node: Header Auth
+   (`Authorization: Bearer <token>`) for Meta Ads, GA4 and Slack, and
+   Custom Auth for Google Ads (carries both `Authorization` and
+   `developer-token`).
+3. **Run the setup lane once** — press play on the orange
+   `SETUP — press play on this node once` trigger; it creates a
+   **Weekly Client Reports** Google Sheet with `config` + `reports`
+   tabs and seed rows. Copy the printed `spreadsheet_id`.
+4. **Two values** — paste `spreadsheet_id` into **Workflow Config**, and
+   your operator address into the **Operator email** node (it receives
+   error alerts and the weekly digest).
+5. **Fill the `config` tab** — one row per client; `src_*`/`sink_*`
+   cells toggle sources and sinks (`yes`/`no`), plus recipient and
+   account-id columns. Optional: `delivery_mode` (`draft` = file to
+   Gmail drafts for review), `brand_name`/`brand_color`/
+   `brand_logo_url`, `alert_threshold_pct`.
+6. **Activate** — press **Test workflow** once to watch the four-client
+   demo run with zero credentials, then set the workflow **Active**
+   (runs Mondays 09:00, workflow timezone). Optional: Settings → Error
+   workflow → this workflow.
+
+Full guide with troubleshooting: **[SETUP.md](SETUP.md)**.
 
 ## Use cases
 
